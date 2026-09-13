@@ -845,6 +845,21 @@
     margin:0 0 12px}
   @keyframes sheetUp{from{transform:translateY(14px);opacity:.6}to{transform:none;opacity:1}}
   .modal h3{margin:0 0 8px;font-size:17px}
+  /* ++++++ PHOTO TITLE ++++++ заголовок листа ПЕРЕНОСИТСЯ, а не уезжает
+     за край. Замерено на 320 px ДО этой задачи: имя файла
+     «81xIDzmVkQL._AC_UF350,350_QL80_.jpg» давало у <h3> scrollWidth 324
+     против clientWidth 288, то есть 36 px текста стояли за краем окна, —
+     так что правило чинит и то, что было, а не только то, что задача
+     приносит. Приносит же она названия товаров, среди которых бывает и
+     одно длинное слово без пробелов.
+
+     Свойство наследуемое, поэтому одной строки хватает и на <h3
+     class="hx"> с его внутренним <span>: второго правила для шапки с
+     крестиком заводить не нужно.
+
+     break-word, а не anywhere: обычные слова переносятся по пробелам
+     как раньше, ломается только слово, которое иначе не поместится. */
+  .modal h3{overflow-wrap:break-word}
   .modal .body{font-size:14px;color:var(--ink-2);line-height:1.55}
   .modal .body b{color:var(--ink)}
   .modal .btns{margin-top:18px;flex-wrap:wrap}
@@ -2657,7 +2672,7 @@ var STR = {
 'faq.a.syncWhat3gd': { en:'Photos of products travel on their own, into the same hidden folder on ' +
                           'your Drive. Invoices travel <b>when you ask</b>: an invoice weighs ' +
                           'megabytes, and pulling every one of them onto a phone would spend your ' +
-                          'traffic on files you may never open. Tap an invoice and it comes.',
+                          'traffic on files you may never open. Open an invoice and it comes.',
                        ru:'Фотографии товаров ездят сами — в ту же скрытую папку вашего Диска. ' +
                           'Накладные едут <b>по нажатию</b>: инвойс весит мегабайты, и тянуть их ' +
                           'все на телефон значит тратить трафик на файлы, которые можно ни разу не ' +
@@ -2721,7 +2736,7 @@ var STR = {
                           'Восстановление возвращает всю группу разом и теми же суммами, а если за ' +
                           'это время склад разошёлся, программа откажется и скажет, чего не ' +
                           'хватает, вместо того чтобы вернуть половину.' },
-'faq.a.trashWhat3':  { en:'A record waits in the trash for {n} and can be brought back with one tap ' +
+'faq.a.trashWhat3':  { en:'A record waits in the trash for {n} and can be brought back in one step ' +
                           'all that time. After that it leaves for good on its own, at the next start.',
                        ru:'Запись ждёт в корзине {n} и всё это время возвращается одним нажатием. ' +
                           'Потом уходит навсегда сама, при следующем запуске.' },
@@ -2895,7 +2910,7 @@ var STR = {
 'lock.checking':  { en:'Waiting for the device…',            ru:'Ждём ответа устройства…' },
 'lock.settings':  { en:'Open device settings',               ru:'Открыть настройки устройства' },
 'lock.reason':    { en:'Confirm it is you',                  ru:'Подтвердите, что это вы' },
-'lock.e.cancel':  { en:'The check was cancelled. Tap «Unlock» to try again.',
+'lock.e.cancel':  { en:'The check was cancelled. Use «Unlock» to try again.',
                     ru:'Проверка отменена. Нажмите «Войти», чтобы попробовать ещё раз.' },
 'lock.e.none':    { en:'This device has no lock set up — no PIN, fingerprint or face — so the system ' +
                        'cannot confirm it is you. Set one up in the device settings and come back: the ' +
@@ -3739,8 +3754,15 @@ var STR = {
 /* ++++++ PHOTO ZOOM ++++++ два ключа: подпись кнопки-снимка и подсказка в
    просмотрщике. Обе колонки, как у каждой записи словаря. */
 'att.zoom':        { en:'Open full screen',          ru:'Открыть во весь экран' },
-'zv.hint':         { en:'Pinch to zoom · double-tap to reset',
+/* ++++++ PLATFORM WORDS ++++++ подсказка называет УПРАВЛЕНИЕ, а оно на
+   двух платформах разное: на телефоне пальцы, на компьютере мышь и
+   клавиши. Одна строка на оба случая всегда врёт одному из них — на
+   Windows владелец читал «двумя пальцами», имея мышь. Пальцевый текст
+   оставлен ДОСЛОВНО прежним: он верен и менять его незачем. */
+'zv.hint.and':     { en:'Pinch to zoom · double-tap to reset',
                      ru:'Двумя пальцами — увеличить · двойное касание — исходный размер' },
+'zv.hint.win':     { en:'Ctrl + wheel to zoom · double-click to reset · drag to move',
+                     ru:'Ctrl + колесо — увеличить · двойной щелчок — исходный размер · тянуть мышью' },
 'att.photo':       { en:'Product photo',            ru:'Фото товара' },
 'att.photoHint':   { en:'Optional. JPG, PNG or WebP, up to {max}. The picture is reduced to {side} px and saved next to the product.',
                      ru:'Не обязательно. JPG, PNG или WebP, до {max}. Снимок уменьшается до {side} px и сохраняется рядом с товаром.' },
@@ -3752,7 +3774,7 @@ var STR = {
                      ru:'сохранится вместе с товаром' },
 'att.photoStored': { en:'{size} · added {date}',    ru:'{size} · добавлено {date}' },
 'att.photoAlt':    { en:'photo of {name}',          ru:'фото товара «{name}»' },
-'att.enlarge':     { en:'Click the photo to enlarge it.', ru:'Нажмите на фото, чтобы увеличить.' },
+'att.enlarge':     { en:'Open the photo to enlarge it.', ru:'Нажмите на фото, чтобы увеличить.' },
 
 'att.desc':        { en:'Description / notes',      ru:'Описание / заметки' },
 'att.descHint':    { en:'Optional, in your own words: colour, packaging, supplier, anything worth remembering.',
@@ -3875,10 +3897,18 @@ var STR = {
 'rmd.unknown':   { en:'no date on record',            ru:'дата неизвестна' },
 'rmd.copied':    { en:'The reminder was copied',      ru:'Напоминание скопировано' },
 'rmd.manualTitle':{ en:'Copy the text by hand',       ru:'Скопируйте текст вручную' },
-'rmd.manualHint':{ en:'The clipboard is not available here. The text below is already selected — ' +
-                      'press Ctrl+C (⌘C) and paste it into the messenger.',
-                   ru:'Буфер обмена здесь недоступен. Текст ниже уже выделен — ' +
-                      'нажмите Ctrl+C (⌘C) и вставьте его в мессенджер.' },
+/* ++++++ PLATFORM WORDS ++++++ ТРЕТИЙ случай той же беды, и нашёл его
+   обход словаря, а не глаз: запасное окно копирования велело нажать
+   Ctrl+C — клавиш, которых на телефоне нет вовсе. Окно это видят как раз
+   чаще на телефоне: буфер отказывает, когда документ не в фокусе. */
+'rmd.manualHint.and':{ en:'The clipboard is not available here. The text below is already selected — ' +
+                          'press and hold it, choose «Copy», and paste it into the messenger.',
+                       ru:'Буфер обмена здесь недоступен. Текст ниже уже выделен — ' +
+                          'нажмите и удерживайте, выберите «Копировать» и вставьте в мессенджер.' },
+'rmd.manualHint.win':{ en:'The clipboard is not available here. The text below is already selected — ' +
+                          'press Ctrl+C (⌘C) and paste it into the messenger.',
+                       ru:'Буфер обмена здесь недоступен. Текст ниже уже выделен — ' +
+                          'нажмите Ctrl+C (⌘C) и вставьте его в мессенджер.' },
 
 /* ---- само сообщение ---- */
 'rmd.t.hello':   { en:'Hello, {name}!',               ru:'Здравствуйте, {name}!' },
@@ -4070,7 +4100,7 @@ var STR = {
 'lot.noteTitle': { en:'Note',                               ru:'Заметка' },
 'lot.nameHint':  { en:'Leave the name, the date and the note empty and the trip becomes unnamed again. The goods and the expenses stay.',
                    ru:'Пустые имя, дата и заметка — поездка снова станет безымянной. Товары и расходы останутся.' },
-'lot.joinWhole': { en:'One tap moves the WHOLE shipment.',
+'lot.joinWhole': { en:'Selecting one moves the WHOLE shipment.',
                    ru:'Одно нажатие переносит приход ЦЕЛИКОМ.' },
 'lot.infoResult':{ en:'<b>Trip result</b> is revenue minus the cost of the goods handed out minus the share of the expenses — all three over the SAME items, or the number would mean nothing. It is not the Profit and not the Net profit above: those are counted over a period and never subtract an expense share.',
                    ru:'<b>Итог поездки</b> — это выручка минус себестоимость выданного минус доля расходов, и все три величины берутся по ОДНИМ И ТЕМ ЖЕ позициям, иначе число не значило бы ничего. Это не «Прибыль» и не «Чистая прибыль»: те считаются за период и доли расходов не вычитают вовсе.' },
@@ -4214,7 +4244,7 @@ var STR = {
                       'without a cost (an old backup, a repaired shipment log), its cost is zero ' +
                       'and earnings equal revenue: the program cannot tell &laquo;got it for ' +
                       'free&raquo; from &laquo;cost not recorded&raquo;. The cost and ' +
-                      'earnings of a single handout are shown in its window &mdash; tap its ' +
+                      'earnings of a single handout are shown in its window &mdash; open its ' +
                       'line in the &laquo;History&raquo;.',
                    ru:'Выручка, себестоимость и заработок — за период с панели над карточкой; ' +
                       'выбранный там товар сужает и их. Оплачено, долг и получено — за всё ' +
@@ -4409,7 +4439,7 @@ var STR = {
    подтверждений, ни одно из которых не переписано. */
 'trash.title':     { en:'Trash',                  ru:'Корзина' },
 'trash.empty':     { en:'The trash is empty',     ru:'Корзина пуста' },
-'trash.emptyHint': { en:'A deleted record waits here for {n} and can be brought back with one tap.',
+'trash.emptyHint': { en:'A deleted record waits here for {n} and can be brought back in one step.',
                      ru:'Удалённая запись ждёт здесь {n} и всё это время может вернуться одним нажатием.' },
 'trash.restore':   { en:'Restore',                ru:'Восстановить' },
 'trash.forever':   { en:'Delete for good',        ru:'Удалить навсегда' },
@@ -6148,8 +6178,8 @@ function dcStockCostFiltered(d){
 
 /* Заполняется скриптом выкладки. В рабочем дереве стоит 'dev' — это и
    значит «собрано руками, обновлений не ищем». */
-var APP_VERSION = '1.19.1';
-var APP_BUILD = '2026-09-12T12:43:52.297Z';
+var APP_VERSION = '1.19.3';
+var APP_BUILD = '2026-09-13T00:38:59.791Z';
 
 /* ==================================================================
  * ++++++ PRODUCT UPDATE ++++++   ОБНОВЛЕНИЕ БЕЗ ТОКЕНА И БЕЗ ВХОДА
@@ -17968,11 +17998,15 @@ function rmdLateHTML(rec){
  *  innerHTML, а имя человека и название товара пишет владелец. */
 function rmdManual(text){
   dialog({ title: tr('rmd.manualTitle'),
-    html: '<p class="remcap">' + tr('rmd.manualHint') + '</p>' +
+    /* ++++++ PLATFORM WORDS ++++++ тернарником с обоими литералами — как
+       у подсказки просмотрщика, и по той же причине. */
+    html: '<p class="remcap">' +
+          tr(uiPlat() === 'and' ? 'rmd.manualHint.and' : 'rmd.manualHint.win') + '</p>' +
           '<textarea id="rmdText" class="rmdta" readonly rows="12">' + esc(text) + '</textarea>',
     cancelLabel: tr('w.close'), buttons: [] });
   /* dialog() ставит фокус на «Закрыть»; здесь нужнее сам текст — он уже
-     выделен, остаётся нажать Ctrl+C. */
+     выделен, остаётся его скопировать тем способом, какой есть на этом
+     устройстве; какой именно — сказано подписью выше. */
   var ta = $('rmdText');
   if (ta){ ta.focus(); if (ta.select) ta.select(); }
 }
@@ -18870,7 +18904,13 @@ function zvOpen(src, name, from){
     '</div>' +
     '<button type="button" class="zvx" aria-label="' + esc(tr('w.close')) + '">' +
       ico('cross') + '</button>' +
-    '<div class="zvhint"><span>' + esc(tr('zv.hint')) + '</span></div>';
+    /* ++++++ PLATFORM WORDS ++++++ ключ собирается ТЕРНАРНИКОМ, а не
+       склейкой: `tr('zv.hint.' + uiPlat())` короче и молча делает оба
+       ключа мёртвыми для наборов словаря — те ищут либо приставку
+       конкатенации, либо буквальный литерал. Здесь оба литерала на
+       виду, и править чужие наборы не приходится. */
+    '<div class="zvhint"><span>' +
+      esc(tr(uiPlat() === 'and' ? 'zv.hint.and' : 'zv.hint.win')) + '</span></div>';
   var stage = back.querySelector('.zvstage');
   var img = back.querySelector('.zvimg');
   var xb = back.querySelector('.zvx');
@@ -19051,6 +19091,73 @@ function zvThumbHTML(url, alt){
     '<span class="attzoomi" aria-hidden="true">' + ico('expand') + '</span></button></div>';
 }
 
+/* =========================================== ++++++ PHOTO TITLE ++++++ ==
+ * КАК НАЗЫВАЕТСЯ ВЛОЖЕНИЕ НА ЭКРАНЕ.
+ *
+ * Жалоба владельца 13.09.2026: «Открываю фото товара — вверху написано
+ * 81xIDzmVkQL._AC_UF350,350_QL80_.jpg. Это ничего не говорит.»
+ *
+ * ПРАВИЛО, ИЗ КОТОРОГО СЛЕДУЕТ ВСЁ: у СНИМКА осмысленное имя ровно одно —
+ * НАЗВАНИЕ ТОВАРА, который на нём снят. У НАКЛАДНОЙ — наоборот, имя файла
+ * и есть содержание: в нём обычно стоит номер инвойса, и потерять его
+ * значит потерять единственное, чем одна накладная отличается от другой.
+ *
+ * Отсюда всё остальное:
+ *   - имя файла снимка не печатается НИГДЕ (решение владельца 13.09: это
+ *     касается и поля фото в форме товара);
+ *   - имя файла накладной остаётся везде, где стояло;
+ *   - ответ «как это называется» ОДИН на все места показа — attTitle().
+ *     Их три (окно, полноэкранный просмотр, форма), и три разных ответа
+ *     разошлись бы при первой же правке.
+ *
+ * ЧЕГО ЗДЕСЬ НЕТ. Имя файла не стирается из ЗАПИСИ: `meta.name` как
+ * лежал, так и лежит — он нужен, когда файл сохраняют на диск
+ * («Сохранить копию» отдаёт его под собственным именем) и когда он едет
+ * обменом. Задача про ПОКАЗ, а не про хранение: схема не двигается,
+ * `validate()` не трогается, резервная копия побайтово прежняя.
+ *
+ * ТОВАР МОЖЕТ НЕ НАЙТИСЬ, и это не ошибка: productById() читает активные
+ * записи, а товар мог уйти в корзину. Тогда подпись — «Фото товара»:
+ * выдумывать название нельзя, а имя файла — то, от чего уходим.
+ */
+
+/** ЕДИНСТВЕННЫЙ ответ «как это вложение называется на экране».
+    Снимок — названием товара, накладная — своим именем файла. */
+function attTitle(m){
+  if (!m) return tr('att.photo');
+  if (m.kind === 'invoice') return attInvLabel(m, tr, fmtDateLong);
+  var p = productById(m.productId);
+  var nm = p && typeof p.name === 'string' ? p.name.trim() : '';
+  return nm || tr('att.photo');
+}
+
+/** Подпись картинки для чтеца экрана. У снимка — та же «фото товара
+    «Чайник»», что печатает карточка (att.photoAlt): второй формулировки
+    об одном и том же заводить нельзя. */
+function attAltOf(m){
+  if (!m) return '';
+  if (m.kind === 'invoice') return m.name || '';
+  var p = productById(m.productId);
+  var nm = p && typeof p.name === 'string' ? p.name.trim() : '';
+  return nm ? tr('att.photoAlt', {name: nm}) : tr('att.photo');
+}
+
+/** То же для снимка, который ещё НЕ сохранён: товара в документе нет, и
+    название берётся из строки формы — того самого поля, которое человек
+    заполняет прямо над фотографией. */
+function attStagedTitle(i){
+  var f = ui.form.product, l = f && f.lines ? f.lines[i] : null;
+  var nm = l && typeof l.name === 'string' ? l.name.trim() : '';
+  return nm || tr('att.photo');
+}
+
+function attStagedAlt(i){
+  var f = ui.form.product, l = f && f.lines ? f.lines[i] : null;
+  var nm = l && typeof l.name === 'string' ? l.name.trim() : '';
+  return nm ? tr('att.photoAlt', {name: nm}) : tr('att.photo');
+}
+/* ++++++ PHOTO TITLE END ++++++ */
+
 function attOpenSheet(id){
   var m = attById(id);
   if (!m){ toast(tr('att.missing'), 'warn'); return; }
@@ -19079,7 +19186,7 @@ function attOpenSheet(id){
     var body = pdf
       ? '<div class="attview"><iframe src="' + url + '" title="' + esc(m.name || '') + '"></iframe></div>' +
         '<div class="note calc">' + tr('att.pdfNote') + '</div>'
-      : zvThumbHTML(url, m.name || '');   /* ++++++ PHOTO ZOOM ++++++ */
+      : zvThumbHTML(url, attAltOf(m));   /* ++++++ PHOTO TITLE ++++++ */
     /* The two links get their address in JS, not in the markup. A blob: URL is
        local, but gluing an address into a link attribute inside a string
        literal puts a literal link into the file, and the offline check reads
@@ -19094,7 +19201,11 @@ function attOpenSheet(id){
     var buttons = m.kind === 'invoice'
       ? [{key:'replace', label: tr('att.replace')}, {key:'del', label: tr('w.delete'), variant:'danger'}]
       : [{key:'replace', label: tr('att.photoChange')}, {key:'del', label: tr('att.photoRemove'), variant:'danger'}];
-    var done = dialog({ title: m.name || tr('att.photo'),
+    /* ++++++ PHOTO TITLE ++++++ заголовок больше не имя файла: у снимка стоит
+       название товара, у накладной — её имя (там номер инвойса), а
+       у накладной БЕЗ имени — «Накладная · дата». Прежняя строка
+       давала накладной без имени подпись «Фото товара». */
+    var done = dialog({ title: attTitle(m),
       html: '<div class="body small muted">' + esc(fmtBytes(m.size)) + ' · ' +
             esc(fmtDateLong(m.addedAt)) + '</div>' + body + links,
       cancelLabel: tr('w.close'), buttons: buttons });
@@ -19127,9 +19238,11 @@ function attOpenSheet(id){
 function attOpenStaged(i){
   var l = ui.form.product.lines[i];
   if (!l || !l.photo || !l.photo.url) return;
-  dialog({ title: l.photo.name || tr('att.photo'),
+  /* ++++++ PHOTO TITLE ++++++ товара в документе ещё нет, и название берётся из
+     строки формы — того самого поля над фотографией. */
+  dialog({ title: attStagedTitle(i),
     html: '<div class="body small muted">' + esc(fmtBytes(l.photo.size)) + '</div>' +
-          zvThumbHTML(l.photo.url, l.photo.name || ''),   /* ++++++ PHOTO ZOOM ++++++ */
+          zvThumbHTML(l.photo.url, attStagedAlt(i)),   /* ++++++ PHOTO TITLE ++++++ */
     cancelLabel: tr('w.close'), buttons: [] });
 }
 
@@ -19200,7 +19313,10 @@ function photoField(i){
     body = '<div class="photobox">' +
       '<button type="button" class="ph" data-act="att-open" data-arg="l:' + i + '">' +
         '<img src="' + l.photo.url + '" alt=""></button>' +
-      '<div class="meta"><b>' + esc(l.photo.name || '—') + '</b>' +
+      /* ++++++ PHOTO TITLE ++++++ имя файла снято (решение владельца 13.09):
+         название товара набирают полем выше, а тот ли это снимок,
+         видно по самой миниатюре слева. */
+      '<div class="meta">' +
       '<small>' + esc(fmtBytes(l.photo.size)) + ' · ' + tr('att.photoPending') + '</small>' +
       '<button type="button" class="lnk" data-act="att-clear" data-arg="l:' + i + '">' +
         tr('att.photoRemove') + '</button></div></div>';
@@ -19208,7 +19324,7 @@ function photoField(i){
     body = '<div class="photobox">' +
       '<button type="button" class="ph" data-act="att-open" data-arg="a:' + esc(curMeta.id) + '">' +
         (curMeta.thumb ? '<img src="' + esc(curMeta.thumb) + '" alt="">' : noPhotoIcon()) + '</button>' +
-      '<div class="meta"><b>' + esc(curMeta.name || '—') + '</b>' +
+      '<div class="meta">' +   /* ++++++ PHOTO TITLE ++++++ */
       '<small>' + tr('att.photoStored', {size: esc(fmtBytes(curMeta.size)),
         date: esc(fmtDateLong(curMeta.addedAt))}) + '</small>' +
       '<span class="two-lnk">' +
@@ -25865,7 +25981,14 @@ function lockWantsSettings(e){ return e === 'none' || e === 'policy' || e === 'f
    Спрашивается строка браузера, как у pubEnv(): мост о платформе не
    сообщает. КАКОЙ именно способ (отпечаток/лицо) настроен — система нам
    не говорит, поэтому подпись остаётся общей, но по своей платформе. */
-function lockPlat(){
+/* ++++++ PLATFORM WORDS ++++++ ЕДИНСТВЕННЫЙ ответ «телефон или
+   компьютер» для ТЕКСТА. Назывался lockPlat и жил при замке, но вопрос
+   общий: подписи замка и подсказка просмотрщика спрашивают одно и то же,
+   а второй ответ на один вопрос однажды разойдётся с первым.
+   Мост о платформе не сообщает, поэтому спрашивается строка браузера —
+   как в pubEnv(); тот отвечает на ДРУГОЙ вопрос (куда идти за
+   обновлением) и различает ещё и браузер, поэтому остаётся отдельным. */
+function uiPlat(){
   var ua = (typeof navigator !== 'undefined' && navigator.userAgent) || '';
   return /Android/i.test(ua) ? 'and' : 'win';
 }
@@ -26025,8 +26148,8 @@ function acctLock(){
          lockSegBtn('lock-on', '0', !i.on, tr('lock.set.off'), lockSetBusy) +
          lockSegBtn('lock-on', '1', i.on, tr('lock.set.on'), lockSetBusy || !ready) +
        '</div><div class="lockhint">' +
-       tr(lockPlat() === 'and' ? (i.on ? 'lock.set.onNote.and' : 'lock.set.offNote.and')
-                               : (i.on ? 'lock.set.onNote.win' : 'lock.set.offNote.win')) + '</div>';
+       tr(uiPlat() === 'and' ? (i.on ? 'lock.set.onNote.and' : 'lock.set.offNote.and')
+                             : (i.on ? 'lock.set.onNote.win' : 'lock.set.offNote.win')) + '</div>';
   if (!i.on && can !== 'ok' && can !== '?')
     h += '<div class="note err">' + tr('lock.e.' + lockErrKey(can)) + '</div>' +
          btn(tr('lock.settings'), 'lock-settings', 'sec block');
@@ -26042,7 +26165,7 @@ function acctLock(){
     LOCK_DELAYS.forEach(function(k){
       h += lockSegBtn('lock-delay', k, i.delay === k, tr('lock.s.' + k), lockSetBusy);
     });
-    h += '</div><div class="lockhint">' + tr('lock.set.delayNote.' + lockPlat()) + '</div></div></section>';
+    h += '</div><div class="lockhint">' + tr('lock.set.delayNote.' + uiPlat()) + '</div></div></section>';
   }
   return h;
 }
