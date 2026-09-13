@@ -1368,6 +1368,9 @@
      должника (16 + 38 + 13) здесь выносил кнопку вбок: аватара у месяца нет
      (живая проверка 13.09). */
   .mract{padding:0 var(--pad) 12px}
+  /* ++++++ REPORT FEEDBACK ++++++ заметка с итогом — под кнопкой, с тем же зазором, что
+     у заметок в карточках; оформление целиком от .note */
+  .mract .note{margin:10px 0 0}
 
   /* вторая строка подписи — возраст долга. Своим цветом, чтобы не слиться
      с «взял … оплатил …»: это про время, а не про деньги.
@@ -1955,6 +1958,14 @@ var STR = {
 'mr.making':     { en:'Preparing…',                       ru:'Готовлю…' },
 'mr.saved':      { en:'Report for {month} saved.',        ru:'Отчёт за {month} сохранён.' },
 'mr.failed':     { en:'The report was not saved ({err}).', ru:'Отчёт не сохранился ({err}).' },
+/* ++++++ REPORT FEEDBACK ++++++ итог сохранения — ВНУТРИ окна, под нажатой кнопкой.
+   Полоса вверху страницы при открытом окне стоит за краем экрана, и на
+   телефоне, где нет окна «Сохранить как», человек не видел ничего
+   (жалоба владельца 13.09). Пара по платформе — правило 121. */
+'mr.done.and':   { en:'Saved: «{name}» is in the Downloads folder.',
+                  ru:'Сохранено: файл «{name}» — в папке «Загрузки».' },
+'mr.done.win':   { en:'The file is ready — choose where to save it in the window that opens.',
+                  ru:'Файл готов — выберите в открывшемся окне, куда его сохранить.' },
 'mr.pdfTitle':   { en:'Report for {month}',               ru:'Отчёт за {month}' },
 'mr.pdfSub':     { en:'{app} · made {when} · amounts in {cur}',
                    ru:'{app} · составлен {when} · суммы в {cur}' },
@@ -6309,8 +6320,8 @@ function dcStockCostFiltered(d){
 
 /* Заполняется скриптом выкладки. В рабочем дереве стоит 'dev' — это и
    значит «собрано руками, обновлений не ищем». */
-var APP_VERSION = '1.19.7';
-var APP_BUILD = '2026-09-13T18:24:17.078Z';
+var APP_VERSION = '1.19.8';
+var APP_BUILD = '2026-09-13T19:50:45.178Z';
 
 /* ==================================================================
  * ++++++ PRODUCT UPDATE ++++++   ОБНОВЛЕНИЕ БЕЗ ТОКЕНА И БЕЗ ВХОДА
@@ -18490,20 +18501,47 @@ function mrFileName(ym, made){
 /** Сохранить отчёт. Кнопка на время сборки гаснет и говорит «Готовлю…»:
  *  месяц на сотни записей собирается не мгновенно, а нажатие без ответа
  *  неотличимо от сломанной кнопки. */
+/* ++++++ REPORT FEEDBACK ++++++ Итог — в заметке ПОД НАЖАТОЙ КНОПКОЙ. Полоса вверху страницы
+ * остаётся (после закрытия окна её видно), но при открытом окне она за
+ * краем экрана: замерено −361 px на телефоне и −300 px на компьютере.
+ * На компьютере это маскировало окно «Сохранить как»; на телефоне файл
+ * ложился в «Загрузки» молча, и владелец нажал пять раз — пять файлов. */
+function mrNote(btnEl, kind, html){
+  var box = btnEl && btnEl.parentNode ? btnEl.parentNode.querySelector('[data-mrnote]') : null;
+  if (!box) return;
+  if (!kind){ box.hidden = true; box.innerHTML = ''; return; }
+  box.className = 'note ' + kind;
+  box.innerHTML = html;
+  box.hidden = false;
+  /* заметка встаёт ПОД кнопкой, и если строка месяца была у нижнего
+     края окна, она ушла бы за край — замерено на 320×640 */
+  if (box.scrollIntoView) box.scrollIntoView({ block: 'nearest' });
+}
 function mrSave(ym, btnEl){
   if (btnEl){ btnEl.disabled = true; btnEl.textContent = tr('mr.making'); }
+  mrNote(btnEl, '', '');
   setTimeout(function(){
-    var made = new Date(), res, out;
+    var made = new Date(), res, out, msg;
     try { out = mrPdfBytes(ym, made); }
     catch(e){
       if (btnEl){ btnEl.disabled = false; btnEl.textContent = tr('mr.save'); }
-      banner('mreport', 'err', tr('mr.failed', { err: esc(e && e.message ? e.message : String(e)) }));
+      msg = tr('mr.failed', { err: esc(e && e.message ? e.message : String(e)) });
+      banner('mreport', 'err', msg);
+      mrNote(btnEl, 'err', msg);
       return;
     }
     res = downloadFile(mrFileName(ym, made), [out.bytes], 'application/pdf');
     if (btnEl){ btnEl.disabled = false; btnEl.textContent = tr('mr.save'); }
-    if (!res.ok){ banner('mreport', 'err', tr('mr.failed', { err: esc(res.err) })); return; }
+    if (!res.ok){
+      msg = tr('mr.failed', { err: esc(res.err) });
+      banner('mreport', 'err', msg);
+      mrNote(btnEl, 'err', msg);
+      return;
+    }
     toast(tr('mr.saved', { month: mrMonthName(out.data.y, out.data.m) }), 'ok');
+    mrNote(btnEl, 'info', uiPlat() === 'and'
+      ? tr('mr.done.and', { name: esc(res.name || mrFileName(ym, made)) })
+      : tr('mr.done.win'));
   }, 30);
 }
 
@@ -18535,7 +18573,7 @@ function mrSheetHTML(){
        поставить: на 320 px подпись съелась бы многоточием. */
     rows += '<div class="rmdrow">' + row({ k: esc(mrMonthTitle(b.y, b.m)), sub: sub }) +
       '<div class="mract"><button type="button" class="btn sec" data-act="mr-save" data-arg="' + esc(ym) + '">' +
-      tr('mr.save') + '</button></div></div>';
+      tr('mr.save') + '</button><div class="note info" data-mrnote hidden></div></div></div>';
   });
   /* Строки — прямые потомки карточки, без .rows: правило .modal .rows с
      полями −16 px рассчитано на строки прямо в листе и в карточке
