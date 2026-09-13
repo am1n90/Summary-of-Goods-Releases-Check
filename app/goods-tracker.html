@@ -1363,6 +1363,11 @@
   /* отступ слева ровно под текстом строки: 16 (падинг) + 38 (.av) + 13 (зазор) */
   .rmdact{padding:0 var(--pad) 11px calc(var(--pad) + 51px)}
   .rmdact .lnk{padding:0;min-height:34px;display:inline-flex;align-items:center}
+  /* ++++++ MONTH REPORT ++++++ ряд кнопки «Сохранить отчёт» в окне отчётов по
+     месяцам: отступ — отступ ТЕКСТА строки. Сдвиг .rmdact под аватар
+     должника (16 + 38 + 13) здесь выносил кнопку вбок: аватара у месяца нет
+     (живая проверка 13.09). */
+  .mract{padding:0 var(--pad) 12px}
 
   /* вторая строка подписи — возраст долга. Своим цветом, чтобы не слиться
      с «взял … оплатил …»: это про время, а не про деньги.
@@ -6274,8 +6279,8 @@ function dcStockCostFiltered(d){
 
 /* Заполняется скриптом выкладки. В рабочем дереве стоит 'dev' — это и
    значит «собрано руками, обновлений не ищем». */
-var APP_VERSION = '1.19.5';
-var APP_BUILD = '2026-09-13T17:10:13.414Z';
+var APP_VERSION = '1.19.6';
+var APP_BUILD = '2026-09-13T17:40:09.646Z';
 
 /* ==================================================================
  * ++++++ PRODUCT UPDATE ++++++   ОБНОВЛЕНИЕ БЕЗ ТОКЕНА И БЕЗ ВХОДА
@@ -18482,12 +18487,20 @@ function mrSheetHTML(){
     var sub = (n.buy || n.tx || n.pay || n.ret || n.exp)
       ? tr('mr.rowCounts', { buy: n.buy, tx: n.tx, pay: n.pay, ret: n.ret, exp: n.exp })
       : tr('mr.rowQuiet');
+    /* Кнопка — СОСЕД строки со СВОИМ рядом .mract: отступ у неё — отступ
+       текста. Чужой .rmdact сдвигал её на 51 px под аватар должника,
+       которого здесь нет, а строчный <span> выпускал кнопку в 50 px из
+       ряда в 30 (живая проверка 13.09). В правую колонку строки её не
+       поставить: на 320 px подпись съелась бы многоточием. */
     rows += '<div class="rmdrow">' + row({ k: esc(mrMonthTitle(b.y, b.m)), sub: sub }) +
-      '<span class="rmdact"><button type="button" class="btn sec" data-act="mr-save" data-arg="' + esc(ym) + '">' +
-      tr('mr.save') + '</button></span></div>';
+      '<div class="mract"><button type="button" class="btn sec" data-act="mr-save" data-arg="' + esc(ym) + '">' +
+      tr('mr.save') + '</button></div></div>';
   });
+  /* Строки — прямые потомки карточки, без .rows: правило .modal .rows с
+     полями −16 px рассчитано на строки прямо в листе и в карточке
+     выносило их за рамку, прижимая текст к её краю (там же). */
   return '<div class="note calc">' + tr('mr.hint', { cur: esc(state.settings.baseCurrency) }) + '</div>' +
-    '<section class="card"><div class="rows">' + rows + '</div></section>';
+    '<section class="card">' + rows + '</section>';
 }
 function mrOpen(){
   dialog({ title: tr('mr.title'), html: mrSheetHTML(), closeX: true, buttons: [], cancelLabel: tr('w.close') });
