@@ -3687,6 +3687,14 @@ var STR = {
    об этом сказано прямо, иначе владелец решит, что копия сделана. */
 'bk.failed':    { en:'The file was not downloaded ({err}). The last-copy date is unchanged — please try again.',
                   ru:'Файл не выгрузился ({err}). Дата последней копии не изменилась — попробуйте ещё раз.' },
+/* ++++++ ANDROID SAVE ++++++ то, что стоит в {err} выше, когда файл не лёг в
+   «Загрузки» телефона. Словами, а не кодом отказа. */
+'dl.needShell': { en:'this version of the app cannot save files on a phone — install the new one',
+                  ru:'эта версия приложения не умеет сохранять файлы на телефоне — установите новую' },
+'dl.e.old':      { en:'Android older than version 10 gives the app nowhere to put the file',
+                  ru:'на Android старше 10-й версии приложению некуда положить файл' },
+'dl.e.write':    { en:'the phone refused to write the file to Downloads',
+                  ru:'телефон не дал записать файл в «Загрузки»' },
 
 'store.where':   { en:'Data lives in this browser (localStorage, key <code class="k">{key}</code>) ' +
                       'and is written immediately after every change — there is no Save button.',
@@ -6178,8 +6186,8 @@ function dcStockCostFiltered(d){
 
 /* Заполняется скриптом выкладки. В рабочем дереве стоит 'dev' — это и
    значит «собрано руками, обновлений не ищем». */
-var APP_VERSION = '1.19.3';
-var APP_BUILD = '2026-09-13T00:38:59.791Z';
+var APP_VERSION = '1.19.4';
+var APP_BUILD = '2026-09-13T12:03:34.391Z';
 
 /* ==================================================================
  * ++++++ PRODUCT UPDATE ++++++   ОБНОВЛЕНИЕ БЕЗ ТОКЕНА И БЕЗ ВХОДА
@@ -6942,7 +6950,7 @@ function pubNoteHTML(){
 /* Три строки, которые переписывает сборка продукта — тем же приёмом,
    которым scripts/publish-update.mjs уже проставляет APP_VERSION. */
 var BUILD_MODE = 'product';        /* 'personal' | 'product' */
-var GOOGLE_CLIENT_ID = '278221747672-5q7a2pfm5970nuo7gch3eb7u7ke5cdlr.apps.googleusercontent.com';          /* не секрет: Google называет его публичным */
+var GOOGLE_CLIENT_ID = '480304131747-8sljj2tvoqnoii8u0d59lajfs6s28e50.apps.googleusercontent.com';          /* не секрет: Google называет его публичным */
 var GOOGLE_REDIRECT = 'http://127.0.0.1:0/oauth2callback';           /* своё на каждой платформе               */
 /* Секрет клиента. Пуст у Android и должен таким остаться: Google сам
    пишет, что «client_secret is not applicable to requests from clients
@@ -6967,7 +6975,7 @@ var GOOGLE_CLIENT_SECRET = '';
  * Ячейку читает ТОЛЬКО оболочка, из УПАКОВАННОГО ядра. Само приложение
  * её не спрашивает нигде: где лежат данные — вопрос платформы, а не
  * программы. */
-var APP_SLOT = '';
+var APP_SLOT = 'check';
 
 /* ------------------------------------------------------------------ */
 /* Что различается                                                    */
@@ -6978,7 +6986,7 @@ var APP_SLOT = '';
    и манифест, а код и записи остаются в приватном. Штамповать эти три
    строки сборкой не нужно — репозиторий один и тот же всегда. */
 var PUB_OWNER = 'am1n90';
-var PUB_REPO = 'Summary-of-Goods-Releases';
+var PUB_REPO = 'Summary-of-Goods-Releases-Check';
 var PUB_BRANCH = 'main';
 
 function modeIsProduct(){ return BUILD_MODE === 'product'; }
@@ -16055,6 +16063,167 @@ function exportBackup(){
    RangeError before a Blob ever existed, on the user's real data. Each record
    is stringified on its own and the punctuation is written by hand, so the
    result is the same JSON and nothing is ever held whole in memory. */
+/* ==================================================================
+ * ++++++ ANDROID SAVE ++++++        ФАЙЛ НА ТЕЛЕФОНЕ ЛОЖИТСЯ В «ЗАГРУЗКИ»
+ *
+ * На Android `<a download>` НЕ ДЕЛАЕТ НИЧЕГО. Ни Capacitor 6.2.1, ни
+ * оболочка не вешают на WebView обработчик скачивания, поэтому нажатие
+ * проходит без исключения, а файла нет. Измерено 13.09.2026 на
+ * «Бухгалтере ТЕСТ»: «Скачать копию» написала «Копия скачана — файлов
+ * внутри: 5 (63 КБ)» и сдвинула отметку последней копии, а на всём
+ * хранилище телефона не нашлось ни одного файла goods-tracker* — ни от
+ * одной из двух программ, за всю историю. Копия с телефона не
+ * сохранялась никогда, и программа каждый раз говорила обратное.
+ *
+ * ПРАВИЛО, ИЗ КОТОРОГО СЛЕДУЕТ ВСЁ:
+ *
+ *   ФАЙЛ ОТДАЁТСЯ ТАМ ЖЕ, ГДЕ ОТДАВАЛСЯ, — В downloadFile(). МЕНЯЕТСЯ
+ *   ТОЛЬКО ТО, КОМУ ОН ОТДАЁТСЯ: НА ANDROID — ОБОЛОЧКЕ.
+ *
+ * Второй двери к файловой системе не появляется: все три вызова
+ * (копия, документ как лежит, нечитаемый документ) по-прежнему идут
+ * через downloadFile(), и его ответ { ok, err } прежний. Поэтому порядок
+ * «сначала файл, потом отметка копии» в exportWrite() не тронут ни на
+ * строку — отметка по-прежнему ставится только после ok.
+ *
+ * СИНХРОННО, И ЭТО НЕ СЛУЧАЙНОСТЬ. Методы @JavascriptInterface отвечают
+ * синхронно, а части файла у всех вызывающих — строки (и, для будущего
+ * PDF, байты), то есть кодируются без FileReader. Асинхронный путь
+ * поменял бы контракт downloadFile() у всех троих вызывающих.
+ *
+ * ПОРЦИЯМИ. Копия с вложениями бывает в десятки мегабайт; одна строка
+ * такого размера через мост на телефоне — отказ по памяти. Каждая
+ * порция — самостоятельный base64, оболочка декодирует и дописывает её
+ * отдельно.
+ *
+ * БАЙТЫ — РОВНО ТЕ, ЧТО ДАЛ БЫ Blob. Blob кодирует строку в UTF-8 и
+ * заменяет одиночный суррогат на U+FFFD. Нечитаемый документ бывает
+ * любым, поэтому это не педантизм: без замены один «битый» знак ронял
+ * бы encodeURIComponent, а разрез пары на границе порции давал бы два
+ * лишних U+FFFD на месте одной буквы.
+ *
+ * ЦЕЛИКОМ ИЛИ НИКАК. Отказ или исключение на любой порции — оболочка
+ * удаляет недописанный файл (saveAbort), и ответ — отказ. ok: true
+ * бывает ТОЛЬКО после того, как оболочка подтвердила конец записи.
+ *
+ * СПРАШИВАЕТСЯ МОСТ, А НЕ ПЛАТФОРМА — там, где он умеет. Оболочка,
+ * которая сохранять не умеет, но называет себя android, получает
+ * честный отказ словами: `<a download>` в ней молчит, и ложный ok там —
+ * ровно та беда, которую эта правка закрывает. Оболочка Windows и
+ * браузер идут прежним путём: там `<a download>` работает.
+ * ================================================================== */
+
+/** Символов строки на одну порцию. UTF-8 даёт до трёх байт на знак BMP,
+ *  то есть порция — не больше ~768 КБ байтов и ~1 МБ base64. */
+var DL_CHARS = 262144;
+/** Байтов на одну порцию, когда часть — уже байты (Uint8Array). */
+var DL_BYTES = 786432;
+
+/** Мост, умеющий класть файл в «Загрузки», или null. */
+function dlSaveBridge(){
+  var br = gdBridge();
+  return (br && typeof br.saveBegin === 'function' && typeof br.saveChunk === 'function' &&
+          typeof br.saveEnd === 'function') ? br : null;
+}
+/** Оболочка Android, которая сохранять НЕ умеет. Там `<a download>`
+ *  молчит, и отдать файл по-старому значило бы соврать «скачано». */
+function dlShellCannotSave(){
+  var br = gdBridge();
+  return !!(br && br.platform === 'android' && !dlSaveBridge());
+}
+/** Отказ оболочки — словами, а не кодом. */
+function dlErrText(code){
+  return code === 'old' ? tr('dl.e.old') : tr('dl.e.write');
+}
+
+/** Строка -> байты UTF-8, как их делает Blob: одиночный суррогат
+ *  становится U+FFFD. TextEncoder делает то же самое и быстрее; ручной
+ *  путь — для движка без него, и набор сверяет оба. */
+function dlUtf8(s){
+  if (typeof TextEncoder === 'function') return new TextEncoder().encode(s);
+  var out = [], i, c, d;
+  for (i = 0; i < s.length; i++){
+    c = s.charCodeAt(i);
+    if (c >= 0xD800 && c <= 0xDBFF && i + 1 < s.length){
+      d = s.charCodeAt(i + 1);
+      if (d >= 0xDC00 && d <= 0xDFFF){
+        c = 0x10000 + ((c - 0xD800) << 10) + (d - 0xDC00);
+        i++;
+      } else c = 0xFFFD;
+    } else if (c >= 0xD800 && c <= 0xDFFF) c = 0xFFFD;
+    if (c < 0x80) out.push(c);
+    else if (c < 0x800) out.push(0xC0 | (c >> 6), 0x80 | (c & 63));
+    else if (c < 0x10000) out.push(0xE0 | (c >> 12), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
+    else out.push(0xF0 | (c >> 18), 0x80 | ((c >> 12) & 63), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
+  }
+  return out;
+}
+/** Байты (массив или Uint8Array) -> base64. Кусками: apply с сотнями
+ *  тысяч аргументов переполняет стек. */
+function dlB64(bytes, from, to){
+  var bin = '', i, step = 8192, sub;
+  for (i = from; i < to; i += step){
+    sub = bytes.slice ? bytes.slice(i, Math.min(i + step, to))
+                      : Array.prototype.slice.call(bytes, i, Math.min(i + step, to));
+    bin += String.fromCharCode.apply(null, sub);
+  }
+  return btoa(bin);
+}
+/** Разложить части файла на порции base64 и отдать каждую в fn.
+ *  fn возвращает false — дальше не идём. Строка режется по знакам и
+ *  НЕ между половинами суррогатной пары. */
+function dlEachChunk(parts, fn){
+  var p, s, at, end, c, bytes, k;
+  for (p = 0; p < parts.length; p++){
+    s = parts[p];
+    if (typeof s === 'string'){
+      for (at = 0; at < s.length; at = end){
+        end = Math.min(at + DL_CHARS, s.length);
+        c = s.charCodeAt(end - 1);
+        /* половина пары на краю порции: отступаем на знак назад, а если
+           порция из одной этой половины — берём пару целиком. Иначе
+           end вернулся бы к at, и цикл встал бы на месте. */
+        if (end < s.length && c >= 0xD800 && c <= 0xDBFF) end = end - 1 > at ? end - 1 : end + 1;
+        bytes = dlUtf8(s.slice(at, end));
+        if (bytes.length && fn(dlB64(bytes, 0, bytes.length)) === false) return false;
+      }
+    } else {
+      bytes = (s instanceof ArrayBuffer) ? new Uint8Array(s) : s;
+      for (k = 0; k < bytes.length; k += DL_BYTES){
+        if (fn(dlB64(bytes, k, Math.min(k + DL_BYTES, bytes.length))) === false) return false;
+      }
+    }
+  }
+  return true;
+}
+/** Отдать файл оболочке. Ответ — тот же { ok, err }, что у downloadFile(). */
+function dlSaveViaShell(br, name, parts, mime){
+  var id = null, r, bad = null;
+  try {
+    r = br.saveBegin(String(name), String(mime || 'application/json'));
+    if (!r || !r.ok || !r.id) return { ok:false, err: dlErrText(r && r.err) };
+    id = String(r.id);
+    dlEachChunk(parts, function(b64){
+      var x = br.saveChunk(id, b64);
+      if (!x || !x.ok){ bad = (x && x.err) || 'write'; return false; }
+      return true;
+    });
+    if (bad !== null){
+      try { br.saveAbort(id); } catch(e1){}
+      return { ok:false, err: dlErrText(bad) };
+    }
+    r = br.saveEnd(id);
+    if (!r || !r.ok){
+      try { br.saveAbort(id); } catch(e2){}
+      return { ok:false, err: dlErrText(r && r.err) };
+    }
+    return { ok:true, name: (r.name ? String(r.name) : String(name)) };
+  } catch(e){
+    if (id !== null){ try { br.saveAbort(id); } catch(e3){} }
+    return { ok:false, err: dlErrText('write') };
+  }
+}
+/* ++++++ ANDROID SAVE END ++++++ */
 /* ++++++ RESCUE ++++++ ЕДИНСТВЕННОЕ место в приложении, где файл отдают
  * браузеру. Раньше эти шесть строк стояли внутри exportWrite(); теперь их
  * зовут двое — выгрузка копии и выгрузка нечитаемого документа, — и место
@@ -16071,6 +16240,12 @@ function exportBackup(){
  * одно: файла нет.
  */
 function downloadFile(name, parts, mime){
+  /* ++++++ ANDROID SAVE ++++++ на Android `<a download>` молчит: файл отдаётся
+     оболочке, которая кладёт его в «Загрузки». Оболочка без этого
+     умения получает отказ словами — не ложное «скачано». */
+  var dlBr = dlSaveBridge();
+  if (dlBr) return dlSaveViaShell(dlBr, name, parts, mime);
+  if (dlShellCannotSave()) return { ok:false, err: tr('dl.needShell') };
   var blob, url, a;
   try {
     blob = new Blob(parts, {type: mime || 'application/json'});
