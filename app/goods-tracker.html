@@ -2450,6 +2450,8 @@ var STR = {
                        ru:'Как считается прибыль и чем она отличается от чистой прибыли?' },
 'faq.q.summaryMoney':{ en:'What are the figures on the Summary made of?',
                        ru:'Из чего складываются цифры на «Сводке»?' },
+'faq.q.monthReport': { en:'How do I get a report for a month?',
+                       ru:'Как получить отчёт за месяц?' },
 'faq.q.moneySec':    { en:'Why does the same amount look different in different places?',
                        ru:'Почему одна и та же сумма в разных местах выглядит по-разному?' },
 'faq.q.moneyFrozen': { en:'What is a frozen exchange rate?',
@@ -2907,6 +2909,34 @@ var STR = {
                        ru:'На телефоне иначе: там обновление — это новый файл приложения, и его ' +
                           'надо поставить поверх прежнего. Записи обновление не трогает ни на одном ' +
                           'из устройств — меняется программа, а не данные.' },
+/* ++++++ FAQ MONTH ++++++ «Как получить отчёт за месяц» (слово владельца
+   13.09). Названия кнопок — те же, что печатает программа, и набор
+   сверяет их со словарём. Второй абзац — пара по платформе (правило 121):
+   куда попадёт файл, на телефоне и на компьютере разное. */
+'faq.a.monthReport1':     { en:'Open the Summary, the «Money» tab, and at the bottom, next to «Full report», ' +
+                               'press «Monthly reports». The window lists the months that have ended, newest ' +
+                               'first, and under each one how many purchases, handouts, payments, returns and ' +
+                               'expenses it had. Press «Save report» next to the month you need.',
+                            ru:'Откройте «Сводку», вкладку «Деньги», и внизу, рядом с «Полный отчёт», нажмите ' +
+                               '«Отчёты по месяцам». В окне — закончившиеся месяцы, новые первыми, и под каждым ' +
+                               'написано, сколько в нём было закупок, выдач, оплат, возвратов и расходов. Нажмите ' +
+                               '«Сохранить отчёт» у нужного месяца.' },
+'faq.a.monthReport2.and': { en:'On a phone the file goes straight to the «Downloads» folder, and any PDF app ' +
+                               'can open it.',
+                            ru:'На телефоне файл сразу ляжет в папку «Загрузки», и открыть его можно любым ' +
+                               'приложением для PDF.' },
+'faq.a.monthReport2.win': { en:'On a computer a save window opens: choose where to put the file.',
+                            ru:'На компьютере откроется окно сохранения: выберите, куда положить файл.' },
+'faq.a.monthReport3':     { en:'The current month is not listed until it ends: a report is made only for a ' +
+                               'closed month. The file holds the month totals, handouts, payments, returns, ' +
+                               'other expenses and the stock at the end of the month, and its figures are the ' +
+                               'same as the Summary shows for that month. The file is built from today’s records ' +
+                               'every time you save it: if you correct an earlier record, save the report again.',
+                            ru:'Текущего месяца в списке нет, пока он не закончится: отчёт бывает только за ' +
+                               'закрытый месяц. В файле — итоги месяца, выдачи, оплаты, возвраты, прочие расходы ' +
+                               'и склад на конец месяца, а цифры те же, что покажет «Сводка» за этот месяц. Файл ' +
+                               'собирается из сегодняшних записей при каждом сохранении: исправили запись задним ' +
+                               'числом — сохраните отчёт заново.' },
 'w.save':        { en:'Save',                               ru:'Сохранить' },
 'w.add':         { en:'Add',                                ru:'Добавить' },
 'w.empty':       { en:'Nothing here yet',                   ru:'Пока пусто' },
@@ -6279,8 +6309,8 @@ function dcStockCostFiltered(d){
 
 /* Заполняется скриптом выкладки. В рабочем дереве стоит 'dev' — это и
    значит «собрано руками, обновлений не ищем». */
-var APP_VERSION = '1.19.6';
-var APP_BUILD = '2026-09-13T17:40:09.646Z';
+var APP_VERSION = '1.19.7';
+var APP_BUILD = '2026-09-13T18:24:17.078Z';
 
 /* ==================================================================
  * ++++++ PRODUCT UPDATE ++++++   ОБНОВЛЕНИЕ БЕЗ ТОКЕНА И БЕЗ ВХОДА
@@ -14905,6 +14935,17 @@ var FAQ = [
   html: function(){ return infoP(tr('sum.identities')) + infoP(tr('sum.byMovingAvg')) +
                            infoP(tr('sum.discInfo')); },
   see: ['money.profit', 'tx.discount', 'report']
+},
+/* ++++++ FAQ MONTH ++++++ «Как получить отчёт за месяц». Иконки «i» нет:
+   на экране отчёта своей иконки нет, и запись без неё — законная форма.
+   Второй абзац — пара по платформе (правило 121). */
+{
+  key: 'month.report', topic: 'money', icon: false,
+  q: function(){ return tr('faq.q.monthReport'); },
+  html: function(){ return infoP(tr('faq.a.monthReport1')) +
+                           infoP(tr(uiPlat() === 'and' ? 'faq.a.monthReport2.and' : 'faq.a.monthReport2.win')) +
+                           infoP(tr('faq.a.monthReport3')); },
+  see: ['summary.money', 'report']
 },
 {
   key: 'money.sections', topic: 'money', icon: false,
